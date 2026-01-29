@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>뉴스 요약 챗봇 (index3)</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #1e3a5f;
+      --navy-light: #2c5282;
+      --green: #2d8a5e;
+      --green-light: #38a169;
+      --green-bg: #f0fdf4;
+      --white: #ffffff;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-500: #64748b;
+      --gray-700: #334155;
+      --gray-900: #0f172a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: #f8fafc;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 0 48px;
+      color: var(--gray-900);
+      -webkit-font-smoothing: antialiased;
+    }
+    .main-container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--navy);
+      text-align: center;
+      margin-bottom: 40px;
+      letter-spacing: -0.02em;
+    }
+    .page-title .accent { color: var(--green); }
+    .section-card {
+      background: var(--white);
+      border-radius: 14px;
+      border: 1px solid var(--gray-200);
+      padding: 28px 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .section-card:hover { border-color: var(--gray-200); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      letter-spacing: -0.01em;
+    }
+    .model-tag {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 5px 12px;
+      border-radius: 100px;
+      letter-spacing: 0.02em;
+    }
+    .form-label { color: var(--gray-700); font-weight: 500; font-size: 0.875rem; margin-bottom: 8px; }
+    .api-key-input {
+      font-family: "SF Mono", "Consolas", monospace;
+      font-size: 0.875rem;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      padding: 12px 16px;
+      background: var(--white);
+      color: var(--gray-900);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .api-key-input::placeholder { color: var(--gray-500); }
+    .api-key-input:focus {
+      border-color: var(--green);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(45,138,94,0.15);
+    }
+    .validation-result {
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin-top: 14px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      border: 1px solid transparent;
+    }
+    .validation-success {
+      background: var(--green-bg);
+      border-color: rgba(45,138,94,0.3);
+      color: #166534;
+    }
+    .validation-error {
+      background: #fef2f2;
+      border-color: rgba(239,68,68,0.25);
+      color: #b91c1c;
+    }
+    .article-card {
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      background: var(--gray-50);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .article-card:hover {
+      border-color: var(--gray-200);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .article-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; color: var(--navy); }
+    .article-title a { color: var(--green); text-decoration: none; }
+    .article-title a:hover { color: var(--green-light); text-decoration: underline; }
+    .article-meta { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 8px; }
+    .article-summary { font-size: 0.85rem; color: var(--gray-700); line-height: 1.55; }
+    .chat-wrap {
+      position: relative;
+      min-height: 340px;
+      height: 500px;
+      max-height: 78vh;
+      resize: vertical;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      background: #b2c7d9;
+    }
+    .chat-container {
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px;
+      margin-bottom: 0;
+    }
+    .chat-container::-webkit-scrollbar { width: 6px; }
+    .chat-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.06); border-radius: 3px; }
+    .chat-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+    .message {
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 18px;
+      word-wrap: break-word;
+      line-height: 1.5;
+      font-size: 0.9rem;
+      display: block;
+      width: fit-content;
+      max-width: 78%;
+    }
+    .message.user {
+      background: #ffe812;
+      color: #191919;
+      margin-left: auto;
+      text-align: right;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .message.bot {
+      background: var(--white);
+      color: #191919;
+      margin-right: auto;
+      border: none;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .summary-box {
+      background: var(--green-bg);
+      border-radius: 12px;
+      border: 1px solid rgba(45,138,94,0.2);
+      padding: 20px 22px;
+      margin-bottom: 20px;
+    }
+    .summary-box h6 { color: var(--navy); margin-bottom: 10px; font-weight: 600; }
+    .summary-box #summary-content { color: var(--gray-700); line-height: 1.6; }
+    .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    .status-ready { background: var(--green-bg); color: var(--green); }
+    .status-waiting { background: transparent; color: var(--navy); }
+    .btn-primary {
+      background: var(--green);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--white);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: var(--green-light);
+      box-shadow: 0 4px 12px rgba(45,138,94,0.3);
+    }
+    .btn-secondary {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      color: var(--gray-700);
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-weight: 500;
+    }
+    .btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-200); color: var(--navy); }
+    .btn-info { background: #eff6ff; border: 1px solid #bfdbfe; color: var(--navy-light); border-radius: 8px; }
+    .btn-info:hover { background: #dbeafe; color: var(--navy); }
+    .btn-success { background: var(--green-bg); border: 1px solid rgba(45,138,94,0.3); color: var(--green); border-radius: 8px; }
+    .btn-success:hover { background: #dcfce7; color: var(--green-light); }
+    .form-control {
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      padding: 12px 16px;
+      background: var(--white);
+      color: var(--gray-900);
+      font-size: 0.9rem;
+    }
+    .form-control::placeholder { color: var(--gray-500); }
+    .form-control:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(45,138,94,0.12);
+      outline: none;
+    }
+    .text-muted { color: var(--gray-500) !important; }
+    .alert-danger {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      border-radius: 10px;
+    }
+    .saved-item {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .saved-item-left { flex: 1; min-width: 0; }
+    .saved-keyword { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+    .saved-meta { font-size: 0.8rem; color: var(--gray-500); }
+    .saved-delete {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--gray-100);
+      color: var(--gray-500);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .saved-delete:hover { background: #fef2f2; color: #b91c1c; }
+    .badge.bg-primary { background: var(--green) !important; }
+    .badge.bg-secondary { background: var(--gray-200) !important; color: var(--gray-700); }
+    #chat-loading { color: var(--green); font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <h1 class="page-title">▸ 뉴스 요약 <span class="accent">챗봇</span></h1>
+
+    <div class="section-card">
+      <div class="section-title">
+        ▸ 재미나이(Gemini) API 키 설정
+        <span class="model-tag" id="model-tag">사용 모델: Gemini 2.5 Flash</span>
+      </div>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-8">
+          <label class="form-label">API 키 입력</label>
+          <input type="text" class="form-control api-key-input" id="api-key-input" placeholder="AIzaSyD3a5aGRqW9nOM_WVqCuTmr7d6fDkf9HyY" value="" autocomplete="off" />
+        </div>
+        <div class="col-md-4">
+          <button type="button" class="btn btn-primary w-100" onclick="validateAndSaveApiKey()">검증 및 저장</button>
+        </div>
+      </div>
+      <div id="api-validation-result"></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">▸ 뉴스 검색 <span id="news-status" class="status-badge status-waiting">대기 중</span></div>
+      <form id="search-form" class="row g-2 mb-3">
+        <div class="col-md-9">
+          <input type="text" class="form-control" id="search-keyword" placeholder="" required />
+        </div>
+        <div class="col-md-3">
+          <button type="submit" class="btn btn-primary w-100" id="search-btn">뉴스 검색</button>
+        </div>
+      </form>
+      <div id="search-error" class="alert alert-danger" style="display: none;"></div>
+      <div id="summary-box" class="summary-box" style="display: none;">
+        <h6 class="fw-bold mb-2">▸ AI 요약</h6>
+        <div id="summary-content"></div>
+      </div>
+      <div id="articles-container"></div>
+      <div id="action-buttons" style="display: none; margin-top: 12px;">
+        <button type="button" class="btn btn-sm btn-info me-2" onclick="generateSummary()">📝 AI 요약 생성</button>
+        <button type="button" class="btn btn-sm btn-success" onclick="saveCurrentNews()">💾 뉴스 저장하기</button>
+      </div>
+    </div>
+
+    <div class="grid-layout">
+      <div class="section-card">
+        <div class="section-title">▸ 수집된 뉴스 목록</div>
+        <div id="articles-list" class="text-muted">뉴스를 검색하면 여기에 표시됩니다.</div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">▸ 뉴스 대화 <span id="chat-status" class="status-badge status-waiting">대기 중</span></div>
+        <div class="chat-wrap" title="아래 모서리를 드래그해 높이 조절">
+          <div class="chat-container" id="chat-messages">
+          <div class="message bot">
+            뉴스를 검색한 후 질문해 주세요.
+          </div>
+        </div>
+        </div>
+        <form id="chat-form" class="row g-2 mt-2">
+          <div class="col-md-9">
+            <input type="text" class="form-control" id="chat-input" placeholder="메시지 입력" required />
+          </div>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">전송</button>
+          </div>
+        </form>
+        <div id="chat-loading" style="display: none; text-align: center; padding: 10px;">답변 생성 중...</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">▸ 저장된 뉴스</div>
+      <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="loadSavedNews()">새로고침</button>
+      <div id="saved-news-list"><div class="text-muted">저장된 뉴스가 없습니다.</div></div>
+    </div>
+  </div>
+
+  <script>
+    var GEMINI_MODEL = "gemini-2.5-flash";
+    var DEFAULT_API_KEY = "AIzaSyD3a5aGRqW9nOM_WVqCuTmr7d6fDkf9HyY";
+    var STORAGE_KEY = "news_chatbot_api_key";
+    var STORAGE_SAVED = "news_chatbot_saved_index3";
+    var PROXY = "https://api.allorigins.win/raw?url=";
+
+    var currentArticles = [];
+    var currentKeyword = "";
+
+    function getApiKey() {
+      try {
+        return localStorage.getItem(STORAGE_KEY) || "";
+      } catch (e) { return ""; }
+    }
+    function setApiKey(key) {
+      try { localStorage.setItem(STORAGE_KEY, key); return true; } catch (e) { return false; }
+    }
+
+    function simpleSummarizeText(text, maxSentences) {
+      if (!text) return "(요약할 내용이 없습니다.)";
+      var tmp = document.createElement("div");
+      tmp.innerHTML = text;
+      var cleaned = (tmp.textContent || tmp.innerText || "").replace(/\s+/g, " ").replace(/&nbsp;/g, " ").trim();
+      if (!cleaned) return "(요약할 내용이 없습니다.)";
+      var sentences = [];
+      var current = "";
+      for (var i = 0; i < cleaned.length; i++) {
+        current += cleaned[i];
+        if (/[.?!？！]/.test(cleaned[i]) || (cleaned[i] === "다") || (cleaned[i] === "요")) {
+          if (current.trim()) { sentences.push(current.trim()); current = ""; }
+        }
+      }
+      if (current.trim()) sentences.push(current.trim());
+      if (sentences.length === 0) return cleaned;
+      return sentences.slice(0, maxSentences || 2).join(" ");
+    }
+
+    async function callGemini(apiKey, prompt) {
+      var url = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(apiKey);
+      var resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+        })
+      });
+      var data = await resp.json();
+      if (data.error) {
+        throw new Error(data.error.message || "API 오류");
+      }
+      var text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0];
+      return text ? text.text : "";
+    }
+
+    function validateAndSaveApiKey() {
+      var inputEl = document.getElementById("api-key-input");
+      var apiKey = inputEl.value.trim();
+      if (!apiKey) apiKey = (inputEl.getAttribute("placeholder") || DEFAULT_API_KEY).trim();
+      var resultDiv = document.getElementById("api-validation-result");
+      if (!apiKey) {
+        resultDiv.innerHTML = '<div class="validation-result validation-error"><strong>❌ API 키를 입력해 주세요.</strong></div>';
+        return;
+      }
+      if (!apiKey.startsWith("AIza")) {
+        resultDiv.innerHTML = '<div class="validation-result validation-error"><strong>❌ API 키 형식이 올바르지 않습니다.</strong> (AIza로 시작해야 합니다)</div>';
+        return;
+      }
+      resultDiv.innerHTML = '<div class="validation-result" style="background:#f3f4f6;border:1px solid #9ca3af;"><strong>⏳ 검증 중...</strong></div>';
+      callGemini(apiKey, "한 줄로 '연결됨'이라고만 답해주세요.")
+        .then(function() {
+          setApiKey(apiKey);
+          resultDiv.innerHTML = '<div class="validation-result validation-success"><strong>✅ API 키가 유효합니다. 저장되었습니다.</strong></div>';
+        })
+        .catch(function(err) {
+          resultDiv.innerHTML = '<div class="validation-result validation-error"><strong>❌ 검증 실패</strong><br><small>' + (err.message || "") + '</small></div>';
+        });
+    }
+
+    document.getElementById("search-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      var keyword = document.getElementById("search-keyword").value.trim();
+      if (!keyword) return;
+      var searchBtn = document.getElementById("search-btn");
+      var errorDiv = document.getElementById("search-error");
+      var articlesContainer = document.getElementById("articles-container");
+      var articlesList = document.getElementById("articles-list");
+      var statusBadge = document.getElementById("news-status");
+      searchBtn.disabled = true;
+      errorDiv.style.display = "none";
+      articlesContainer.innerHTML = "";
+      articlesList.innerHTML = "";
+      statusBadge.textContent = "검색 중...";
+      statusBadge.className = "status-badge status-waiting";
+
+      var rssUrl = "https://news.google.com/rss/search?q=" + encodeURIComponent(keyword) + "&hl=ko&gl=KR&ceid=KR:ko";
+      var proxyUrl = PROXY + encodeURIComponent(rssUrl);
+      try {
+        var resp = await fetch(proxyUrl);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        var text = await resp.text();
+        var parser = new DOMParser();
+        var xml = parser.parseFromString(text, "application/xml");
+        var items = Array.from(xml.getElementsByTagName("item")).slice(0, 10);
+        if (items.length === 0) {
+          statusBadge.textContent = "뉴스를 찾지 못함";
+          statusBadge.className = "status-badge status-waiting";
+          articlesList.innerHTML = "<div class=\"text-muted\">뉴스를 찾지 못했습니다.</div>";
+          return;
+        }
+        currentArticles = [];
+        items.forEach(function(item) {
+          var title = (item.getElementsByTagName("title")[0] && item.getElementsByTagName("title")[0].textContent) || "(제목 없음)";
+          var link = (item.getElementsByTagName("link")[0] && item.getElementsByTagName("link")[0].textContent) || "";
+          var pubDate = (item.getElementsByTagName("pubDate")[0] && item.getElementsByTagName("pubDate")[0].textContent) || "";
+          var desc = (item.getElementsByTagName("description")[0] && item.getElementsByTagName("description")[0].textContent) || "";
+          currentArticles.push({ title: title, link: link, published: pubDate, summary: desc, summary_short: simpleSummarizeText(desc, 2) });
+        });
+        currentKeyword = keyword;
+        statusBadge.textContent = currentArticles.length + "개 수집 완료";
+        statusBadge.className = "status-badge status-ready";
+        var listHtml = "";
+        currentArticles.forEach(function(article, idx) {
+          listHtml += "<div class=\"article-card\"><div class=\"article-title\">" + (idx + 1) + ". " + (article.title || "(제목 없음)") + "</div>" + (article.published ? "<div class=\"article-meta\">" + article.published + "</div>" : "") + "</div>";
+        });
+        articlesList.innerHTML = listHtml;
+        var detailHtml = "<p class=\"text-muted mb-2\">총 " + currentArticles.length + "개 기사</p>";
+        currentArticles.forEach(function(article) {
+          var titleHtml = article.link ? "<a href=\"" + article.link + "\" target=\"_blank\" rel=\"noopener\">" + (article.title || "") + "</a>" : (article.title || "");
+          detailHtml += "<div class=\"article-card\"><div class=\"article-title\">" + titleHtml + "</div>" + (article.published ? "<div class=\"article-meta\">" + article.published + "</div>" : "") + "<div class=\"article-summary\">" + (article.summary_short || article.summary || "") + "</div></div>";
+        });
+        articlesContainer.innerHTML = detailHtml;
+        document.getElementById("chat-status").textContent = currentArticles.length + "개 뉴스 준비됨";
+        document.getElementById("chat-status").className = "status-badge status-ready";
+        document.getElementById("action-buttons").style.display = "block";
+      } catch (err) {
+        errorDiv.innerHTML = "<strong>오류</strong><br><small>" + (err.message || "뉴스를 불러오지 못했습니다.") + "</small>";
+        errorDiv.style.display = "block";
+        statusBadge.textContent = "검색 실패";
+        statusBadge.className = "status-badge status-waiting";
+      } finally {
+        searchBtn.disabled = false;
+      }
+    });
+
+    function generateSummary() {
+      if (currentArticles.length === 0) { alert("요약할 뉴스가 없습니다."); return; }
+      var apiKey = getApiKey();
+      if (!apiKey) { alert("API 키를 먼저 입력하고 검증·저장해 주세요."); return; }
+      var summaryBox = document.getElementById("summary-box");
+      var summaryContent = document.getElementById("summary-content");
+      summaryBox.style.display = "block";
+      summaryContent.textContent = "요약 생성 중...";
+      var newsText = "";
+      currentArticles.forEach(function(a, i) {
+        newsText += "[기사 " + (i + 1) + "] 제목: " + (a.title || "") + "\n내용: " + (a.summary || a.summary_short || "") + "\n\n";
+      });
+      var prompt = "다음 뉴스 기사들을 읽고 전체적인 요약을 한국어로 3~5문장으로 간결하게 작성해주세요.\n\n" + newsText + "\n요약:";
+      callGemini(apiKey, prompt)
+        .then(function(summary) {
+          summaryContent.textContent = summary || "(요약 없음)";
+        })
+        .catch(function(err) {
+          summaryContent.textContent = "오류: " + (err.message || "요약 생성 실패");
+        });
+    }
+
+    document.getElementById("chat-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      var input = document.getElementById("chat-input");
+      var message = input.value.trim();
+      if (!message) return;
+      if (currentArticles.length === 0) { alert("먼저 뉴스를 검색해 주세요."); return; }
+      var apiKey = getApiKey();
+      if (!apiKey) { alert("API 키를 먼저 입력하고 검증·저장해 주세요."); return; }
+      var chatMessages = document.getElementById("chat-messages");
+      var userMsg = document.createElement("div");
+      userMsg.className = "message user";
+      userMsg.textContent = message;
+      chatMessages.appendChild(userMsg);
+      input.value = "";
+      document.getElementById("chat-loading").style.display = "block";
+      var newsText = "";
+      currentArticles.forEach(function(a, i) {
+        newsText += "[기사 " + (i + 1) + "] 제목: " + (a.title || "") + "\n내용: " + (a.summary || a.summary_short || "") + "\n\n";
+      });
+      var prompt = "당신은 뉴스 분석 전문가입니다. 아래 뉴스 기사들을 바탕으로 사용자 질문에만 한국어로 답변해주세요.\n\n" + newsText + "\n사용자 질문: " + message + "\n\n답변:";
+      callGemini(apiKey, prompt)
+        .then(function(response) {
+          var botEl = document.createElement("div");
+          botEl.className = "message bot";
+          botEl.textContent = response || "(답변 없음)";
+          chatMessages.appendChild(botEl);
+        })
+        .catch(function(err) {
+          var errEl = document.createElement("div");
+          errEl.className = "message bot";
+          errEl.textContent = "오류: " + (err.message || "답변 생성 실패");
+          chatMessages.appendChild(errEl);
+        })
+        .finally(function() {
+          document.getElementById("chat-loading").style.display = "none";
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    });
+
+    function saveCurrentNews() {
+      if (!currentKeyword || currentArticles.length === 0) { alert("저장할 뉴스가 없습니다."); return; }
+      try {
+        var saved = JSON.parse(localStorage.getItem(STORAGE_SAVED) || "[]");
+        saved.push({
+          keyword: currentKeyword,
+          timestamp: new Date().toLocaleString("ko-KR"),
+          articles: currentArticles
+        });
+        localStorage.setItem(STORAGE_SAVED, JSON.stringify(saved));
+        alert("뉴스가 저장되었습니다!");
+        loadSavedNews();
+      } catch (e) {
+        alert("저장 실패: " + (e.message || "알 수 없음"));
+      }
+    }
+
+    function deleteSavedNews(index) {
+      try {
+        var saved = JSON.parse(localStorage.getItem(STORAGE_SAVED) || "[]");
+        if (index < 0 || index >= saved.length) return;
+        saved.splice(index, 1);
+        localStorage.setItem(STORAGE_SAVED, JSON.stringify(saved));
+        loadSavedNews();
+      } catch (e) { console.error(e); }
+    }
+
+    function loadSavedNews() {
+      var listEl = document.getElementById("saved-news-list");
+      try {
+        var saved = JSON.parse(localStorage.getItem(STORAGE_SAVED) || "[]");
+        if (saved.length === 0) {
+          listEl.innerHTML = "<div class=\"text-muted\">저장된 뉴스가 없습니다.</div>";
+          return;
+        }
+        var html = "";
+        saved.forEach(function(item, idx) {
+          var kw = (item.keyword || "").trim() || "검색어 없음";
+          var ts = item.timestamp || "";
+          var n = item.articles ? item.articles.length : 0;
+          html += "<div class=\"article-card mb-3 saved-item\"><div class=\"saved-item-left\"><div class=\"saved-keyword\">" + kw + "</div><div class=\"saved-meta\">" + ts + (n ? " · " + n + "개 기사" : "") + "</div></div><button type=\"button\" class=\"saved-delete\" onclick=\"deleteSavedNews(" + idx + ")\" title=\"삭제\">×</button></div>";
+        });
+        listEl.innerHTML = html;
+      } catch (e) {
+        listEl.innerHTML = "<div class=\"text-danger\">불러오기 오류</div>";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      var savedKey = getApiKey();
+      if (savedKey) document.getElementById("api-key-input").value = savedKey;
+      loadSavedNews();
+      document.getElementById("api-key-input").focus();
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
