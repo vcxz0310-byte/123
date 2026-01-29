@@ -3,6 +3,14 @@ const HISTORY_LIMIT = 12;
 const DEFAULT_SET_COUNT = 5;
 const FIRST_RUN_KEY = "lotto_recommender_first_run_v1";
 
+// 2026년 로또 6/45 1등 당첨번호(회차별 6개 + 보너스)
+// 기준일: 2026-01-29 (필요 시 여기 배열에 계속 추가하면 됩니다)
+const WINNING_2026 = [
+  { round: 1206, date: "2026-01-10", main: [1, 3, 17, 26, 27, 42], bonus: 23 },
+  { round: 1207, date: "2026-01-17", main: [10, 22, 24, 27, 38, 45], bonus: 11 },
+  { round: 1208, date: "2026-01-24", main: [6, 27, 30, 36, 38, 42], bonus: 25 },
+];
+
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
@@ -181,6 +189,69 @@ function renderHistory(listEl, history) {
   });
 }
 
+function renderWinning(container, rows) {
+  container.innerHTML = "";
+  if (!rows || rows.length === 0) {
+    const div = document.createElement("div");
+    div.className = "muted";
+    div.textContent = "표시할 데이터가 없어요.";
+    container.appendChild(div);
+    return;
+  }
+
+  const sorted = [...rows].sort((a, b) => b.round - a.round);
+  sorted.forEach((r) => {
+    const row = document.createElement("div");
+    row.className = "win-row";
+
+    const meta = document.createElement("div");
+    meta.className = "win-meta";
+
+    const round = document.createElement("span");
+    round.className = "win-round";
+    round.textContent = `${r.round}회`;
+
+    const date = document.createElement("span");
+    date.className = "win-date";
+    date.textContent = r.date;
+
+    meta.appendChild(round);
+    meta.appendChild(date);
+
+    const balls = document.createElement("div");
+    balls.className = "balls";
+
+    const set = normalizeSet({ main: r.main, bonus: r.bonus });
+    if (set) {
+      set.main.forEach((n) => {
+        const b = document.createElement("span");
+        b.className = `ball ${ballClassByNumber(n)}`;
+        b.textContent = String(n);
+        balls.appendChild(b);
+      });
+
+      const sep = document.createElement("span");
+      sep.className = "separator";
+      sep.textContent = "+";
+      balls.appendChild(sep);
+
+      const bonusLabel = document.createElement("span");
+      bonusLabel.className = "bonus-label";
+      bonusLabel.textContent = "B";
+      balls.appendChild(bonusLabel);
+
+      const bonusBall = document.createElement("span");
+      bonusBall.className = "ball bonus";
+      bonusBall.textContent = String(set.bonus);
+      balls.appendChild(bonusBall);
+    }
+
+    row.appendChild(meta);
+    row.appendChild(balls);
+    container.appendChild(row);
+  });
+}
+
 function setsToClipboardText(sets) {
   return sets.map((s, i) => `${i + 1}세트: ${formatSetWithBonus(s)}`).join("\n");
 }
@@ -237,12 +308,14 @@ function main() {
   const btnClear = document.getElementById("btnClear");
   const resultSets = document.getElementById("resultSets");
   const historyList = document.getElementById("historyList");
+  const winning2026 = document.getElementById("winning2026");
   const status = document.getElementById("status");
   const toast = createToast();
 
   let lastSets = [];
   let history = loadHistory();
   renderHistory(historyList, history);
+  if (winning2026) renderWinning(winning2026, WINNING_2026);
 
   function setStatus(msg) {
     status.textContent = msg || "";

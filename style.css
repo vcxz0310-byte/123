@@ -431,6 +431,48 @@ kbd {
   text-align: center;
 }
 
+.winning {
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.win-row {
+  border: 1px solid rgba(148, 163, 184, 0.20);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.win-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.win-round {
+  font-weight: 1000;
+  color: rgba(255, 255, 255, 0.92);
+  letter-spacing: -0.02em;
+}
+
+.win-date {
+  color: rgba(226, 232, 240, 0.68);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.footnote {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+
 .toast {
   position: fixed;
   inset: auto 16px 16px 16px;
