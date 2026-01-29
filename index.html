@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>로또 번호 랜덤 추천</title>
+    <meta name="description" content="로또 6/45 번호를 중복 없이 랜덤으로 추천해주는 웹사이트" />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg" aria-hidden="true">
+      <div class="orb orb-a"></div>
+      <div class="orb orb-b"></div>
+      <div class="grid"></div>
+    </div>
+
+    <main class="container">
+      <header class="header">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">L</div>
+          <div>
+            <h1 class="title">로또 번호 랜덤 추천</h1>
+            <p class="subtitle">
+              1~45에서 <strong>6개 + 보너스 1개</strong> (중복 없음) · <strong>한 번에 5세트</strong>
+            </p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="btnGenerate" class="btn btn-primary" type="button">추천받기</button>
+          <button id="btnCopy" class="btn" type="button" disabled>복사</button>
+          <button id="btnClear" class="btn btn-ghost" type="button">기록 삭제</button>
+        </div>
+      </header>
+
+      <section class="card card-hero">
+        <div class="hero-row">
+          <div class="hero-left">
+            <div class="pill">
+              <span class="dot" aria-hidden="true"></span>
+              <span>오늘의 운을 가볍게 뽑아보세요</span>
+            </div>
+            <h2 class="hero-title">빠르고 깔끔하게, 바로 5세트 추천</h2>
+            <p class="hero-desc">
+              생성된 번호는 자동으로 기록되며, <strong>복사</strong>해서 바로 메모/카톡에 붙여넣을 수 있어요.
+            </p>
+            <div class="quick-hints">
+              <span class="hint"><kbd>Enter</kbd> 추천</span>
+              <span class="hint"><kbd>Ctrl</kbd>+<kbd>C</kbd> 복사</span>
+              <span class="hint"><kbd>Esc</kbd> 알림 닫기</span>
+            </div>
+          </div>
+          <div class="hero-right" aria-hidden="true">
+            <div class="mini-card">
+              <div class="mini-title">미리보기</div>
+              <div class="mini-balls">
+                <span class="ball b1">7</span>
+                <span class="ball b2">14</span>
+                <span class="ball b3">23</span>
+                <span class="ball b4">31</span>
+                <span class="ball b5">42</span>
+                <span class="ball b1">45</span>
+                <span class="separator">+</span>
+                <span class="bonus-label">B</span>
+                <span class="ball bonus">9</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result">
+          <div class="result-header">
+            <h2 class="section-title">추천 결과</h2>
+            <p id="status" class="status" aria-live="polite"></p>
+          </div>
+          <div id="resultSets" class="sets" aria-label="추천된 번호 목록"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="history-header">
+          <h2 class="section-title">최근 추천</h2>
+          <p class="muted">브라우저에 자동 저장됩니다.</p>
+        </div>
+        <ol id="historyList" class="history" aria-label="최근 추천 기록"></ol>
+      </section>
+
+      <footer class="footer">
+        <small class="muted">로또 6/45 번호 추천기 · 로컬에서만 동작 · 데이터는 브라우저에만 저장</small>
+      </footer>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <div class="toast-inner">
+        <div class="toast-title" id="toastTitle">알림</div>
+        <div class="toast-msg" id="toastMsg"></div>
+        <button id="toastClose" class="toast-close" type="button" aria-label="알림 닫기">닫기</button>
+      </div>
+    </div>
+
+    <script src="./script.js" defer></script>
+  </body>
+</html>
